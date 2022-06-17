@@ -8,39 +8,67 @@ import 'package:whatapp_clone_ui/screens/MediaToBePosted.dart';
 class TakePictureScreen extends StatefulWidget {
   const TakePictureScreen({
     Key? key,
-    required this.camera,
+    // required this.camera,
   }) : super(key: key);
 
-  final CameraDescription camera;
 
   @override
   TakePictureScreenState createState() => TakePictureScreenState();
 }
 
 class TakePictureScreenState extends State<TakePictureScreen> {
-  late CameraController _controller;
+
+  bool _isLoading = true;
+  bool _clicked = false;
+  late CameraDescription side;
+  late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
 
   @override
   void initState() {
     super.initState();
-    // To display the current output from the Camera,
-    // create a CameraController.
-    _controller = CameraController(
-      // Get a specific camera from the list of available cameras.
-      widget.camera,
-      // Define the resolution to use.
-      ResolutionPreset.medium,
-    );
-
-    // Next, initialize the controller. This returns a Future.
-    _initializeControllerFuture = _controller.initialize();
+    _initCamera();
   }
+
+  _initCamera() async {
+    //Request all available cameras from the camera plugin
+    final cameras = await availableCameras();
+    //Selecting the front-facing camera.
+     side = cameras.firstWhere(
+            (camera) => camera.lensDirection == CameraLensDirection.front);
+
+    if (_clicked) {
+      side = cameras.firstWhere(
+              (camera) => camera.lensDirection == CameraLensDirection.back);
+    } /*else {
+      side = cameras.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front);
+    }*/
+
+    /*Create an instance of CameraController. We are using the CameraDescription
+  of the front camera and setting the resolution of the video to the maximum.*/
+    _cameraController = CameraController(side, ResolutionPreset.max);
+    //Initialize the controller with the set parameters.
+    _initializeControllerFuture = _cameraController.initialize();
+    setState(() => _isLoading = false);
+  }
+
+
+  _changeCamera() async {
+    if (_clicked) {
+      setState(() => {_clicked = false, _isLoading = true});
+      _initCamera();
+    } else {
+      setState(() => {_clicked = true, _isLoading = true});
+      _initCamera();
+    }
+  }
+
 
   @override
   void dispose() {
     // Dispose of the controller when the widget is disposed.
-    _controller.dispose();
+    _cameraController.dispose();
     super.dispose();
   }
 
@@ -63,7 +91,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 return Container(
                   height: MediaQuery.of(context).size.height,
                     alignment: Alignment.center,
-                    child: CameraPreview(_controller)
+                    child: CameraPreview(_cameraController)
                 );
               } else {
                 // Otherwise, display a loading indicator.
@@ -87,7 +115,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
                   // Attempt to take a picture and get the file `image`
                   // where it was saved.
-                  final image = await _controller.takePicture();
+                  final image = await _cameraController.takePicture();
 
                   // If the picture was taken, display it on a new screen.
                   await Navigator.of(context).push(
@@ -107,23 +135,14 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               child: const Icon(Icons.camera_alt),
             ),
           ),
-          // new Align(
-          //   alignment: Alignment.bottomRight,
-          //
-          //   child: FloatingActionButton(
-          //     heroTag: "switch",
-          //     // Provide an onPressed callback.
-          //     onPressed: () async {
-          //       final cameras = await availableCameras();
-          //       Navigator.pop(context);
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(builder: (context) => TakePictureScreen(camera: cameras.last,)),
-          //       );
-          //     },
-          //     child: const Icon(Icons.wifi_protected_setup_outlined),
-          //   ),
-          // )
+          new Align(
+            alignment: Alignment.bottomRight,
+
+            child:  FloatingActionButton(
+                backgroundColor: Colors.red,
+                child: Icon(Icons.wifi_protected_setup_outlined),
+                onPressed: () => _changeCamera()),
+          )
         ],
       )
     );

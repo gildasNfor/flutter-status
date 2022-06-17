@@ -16,7 +16,7 @@ class StatusPreviewModel {
   Map<String, dynamic> toMap() {
     return {
       "userNumber": userNumber,
-      "name": numberOfStatus,
+      "numberOfStatus": numberOfStatus,
       "lastImageThumb": lastImageThumb,
       "lastStatusTime": lastStatusTime,
     };
@@ -25,7 +25,7 @@ class StatusPreviewModel {
   factory StatusPreviewModel.fromMap(Map<String, dynamic> json) {
     return StatusPreviewModel(
         userNumber: json['userNumber'],
-        numberOfStatus: json['name'],
+        numberOfStatus: json['numberOfStatus'],
         lastImageThumb: json['lastImageThumb'],
         lastStatusTime: json['lastStatusTime'],
     );

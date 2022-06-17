@@ -15,7 +15,8 @@ class StatusModel {
   String statusText;
   String statusCaption;
   String disappearTime;
-  StatusModel({required this.userNumber, required this.postTime, required this.statusImageUrl,required this.statusVideoUrl, required this.isPublicStatus, required this.statusText,required this.statusCaption, required this.disappearTime});
+  String duration;
+  StatusModel({required this.userNumber, required this.postTime, required this.statusImageUrl,required this.statusVideoUrl, required this.isPublicStatus, required this.statusText,required this.statusCaption, required this.disappearTime, required this.duration});
 
   Map<String, dynamic> toMap() {
     return {
@@ -26,7 +27,8 @@ class StatusModel {
       "isPublicStatus": isPublicStatus,
       "statusText": statusText,
       "statusCaption": statusCaption,
-      "disappearTime": disappearTime
+      "disappearTime": disappearTime,
+      "duration": duration
     };
   }
 
@@ -39,7 +41,8 @@ class StatusModel {
         isPublicStatus: json['isPublicStatus'],
         statusText: json['statusText'],
         statusCaption: json["statusCaption"],
-        disappearTime: json['disappearTime']
+        disappearTime: json['disappearTime'],
+        duration: json['duration']
     );
   }
   //

@@ -8,6 +8,8 @@ import 'package:line_icons/line_icons.dart';
 import 'package:whatapp_clone_ui/json/chat_json.dart';
 import 'package:whatapp_clone_ui/models/StatusModel.dart';
 import 'package:whatapp_clone_ui/models/StatusPreviewModel.dart';
+import 'package:whatapp_clone_ui/pages/status_item.dart';
+import 'package:whatapp_clone_ui/pages/video_page.dart';
 import 'package:whatapp_clone_ui/screens/TakePictureScreen.dart';
 import 'package:whatapp_clone_ui/shared/connection.dart';
 import 'package:whatapp_clone_ui/theme/colors.dart';
@@ -21,40 +23,34 @@ import '../screens/MediaToBePosted.dart';
 import '../screens/StatusMessage.dart';
 import '../screens/VideoToBePosted.dart';
 
-
-
 class StatusPage extends StatefulWidget {
   @override
   _StatusPageState createState() => _StatusPageState();
 }
 
 class _StatusPageState extends State<StatusPage> {
-
   late Future<List<StatusPreviewModel>> statusList;
 
-
-
   @override
-  void initState()  {
+  void initState() {
     super.initState();
     statusList = fetchStatusPreview();
-    print(statusList);
+    print(statusList.toString());
   }
 
-
   Future<List<StatusPreviewModel>> fetchStatusPreview() async {
-    final response =
-    await http.get(Uri.parse('$hostAndPort/status_preview'));
+    final response = await http.get(Uri.parse('$hostAndPort/status_preview'));
     if (response.statusCode == 200) {
       final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
       print("No error");
-
-      return parsed.map<StatusPreviewModel>((json) => StatusPreviewModel.fromMap(json)).toList();
+      print(parsed);
+      return parsed
+          .map<StatusPreviewModel>((json) => StatusPreviewModel.fromMap(json))
+          .toList();
     } else {
       throw Exception('Failed to load album');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -78,95 +74,6 @@ class _StatusPageState extends State<StatusPage> {
         ],
       ),
     );
-  }
-  Widget preview (AsyncSnapshot<List<StatusPreviewModel>>  snapshot, int index) {
-    return GestureDetector(
-      onTap: () async {
-        final response =
-        await http.get(Uri.parse('$hostAndPort/status/${snapshot.data![index].userNumber}'));
-
-        print(json.decode(response.body)[0]);
-        final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
-
-        final res = parsed.map<StatusModel>((json) => StatusModel.fromMap(json)).toList()[0];
-        print(res);
-
-        if(res.statusImageUrl != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Photo(res.statusImageUrl, res.statusCaption)),
-          );
-        } else if (res.statusVideoUrl != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => VideoApp(res.statusVideoUrl, res.statusCaption)),
-          );
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => DisplayStatusText(res.statusText)),
-          );
-        }
-      },
-
-        child: Container(
-      height: 80,
-      width: double.infinity,
-      decoration: BoxDecoration(color: textfieldColor),
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                                image: NetworkImage('$hostAndPort/status/view_image/672840255?postTime=2022-04-02T02:01:34.128214'),
-                                fit: BoxFit.cover)),
-                      ),
-
-                    ],
-                  ),
-                ),
-                SizedBox(width: 5),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${snapshot.data![index].userNumber}",
-                      style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: white),
-                    ),
-                    SizedBox(
-                      height: 3,
-                    ),
-                    Text(
-                      "${snapshot.data![index].lastStatusTime}",
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: white.withOpacity(0.5)),
-                    )
-                  ],
-                )
-              ],
-            ),
-
-          ],
-        ),
-      ),
-    ));
   }
 
   Widget getBody() {
@@ -281,62 +188,74 @@ class _StatusPageState extends State<StatusPage> {
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: () async {
-
-                        // final ImagePicker _picker = ImagePicker();
-                        // final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-                        //
-                        // if (pickedFile != null) {
-                        //   String imageFile = pickedFile.path;
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(builder: (context) => MediaToBePosted(imageFile)),
-                        //   );
-                        // }
-                        final cameras = await availableCameras();
-                        Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => TakePictureScreen(camera: cameras.first,)),
-                              );
-
-                      },
-                        child: Container(
-
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                          color: white.withOpacity(0.1),
-                          shape: BoxShape.circle),
-                      child: Center(
-                        child: Icon(
-
-                          Icons.camera_alt,
-                          color: primary,
-                          size: 20,
-                        ),
-                      ),
-                    )),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    GestureDetector(
                         onTap: () async {
+                          print("clicking");
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  content: Stack(
+                                    overflow: Overflow.visible,
+                                    children: <Widget>[
+                                      Positioned(
+                                        right: -40.0,
+                                        top: -40.0,
+                                        child: InkResponse(
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: CircleAvatar(
+                                            child: Icon(Icons.close),
+                                            backgroundColor: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      Form(
+                                        // key: _formKey,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            Padding(
+                                              padding: EdgeInsets.all(8.0),
+                                              child: RaisedButton(
+                                                child: Text("Take with Camera"),
+                                                onPressed: () async {
 
-                          final ImagePicker _picker = ImagePicker();
-                          final XFile? pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
+                                                  final cameras = await availableCameras();
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(builder: (context) => TakePictureScreen()),
+                                                  );
+                                                },
+                                              )
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.all(8.0),
+                                              child: RaisedButton(
+                                                child: Text("Pick from Gallery"),
+                                                onPressed: () async {
+                                                  final ImagePicker _picker = ImagePicker();
+                                                  final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
-                          // if (pickedFile != null) {
-                          String videoFile = pickedFile!.path;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => VideoToBePosted(videoFile)),
-                          );
-                          // }
-
-                          print("The button has been clicked");
+                                                  if (pickedFile != null) {
+                                                    String imageFile = pickedFile.path;
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(builder: (context) => MediaToBePosted(imageFile)),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              });
                         },
                         child: Container(
-
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
@@ -344,7 +263,98 @@ class _StatusPageState extends State<StatusPage> {
                               shape: BoxShape.circle),
                           child: Center(
                             child: Icon(
+                              Icons.camera_alt,
+                              color: primary,
+                              size: 20,
+                            ),
+                          ),
+                        )),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    GestureDetector(
+                        onTap: () async {
 
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  content: Stack(
+                                    overflow: Overflow.visible,
+                                    children: <Widget>[
+                                      Positioned(
+                                        right: -40.0,
+                                        top: -40.0,
+                                        child: InkResponse(
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: CircleAvatar(
+                                            child: Icon(Icons.close),
+                                            backgroundColor: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      Form(
+                                        // key: _formKey,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            Padding(
+                                                padding: EdgeInsets.all(8.0),
+                                                child: RaisedButton(
+                                                  child: Text("Take with Camera"),
+                                                  onPressed: () async {
+
+                                                    final cameras = await availableCameras();
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(builder: (context) => CameraPage()),
+                                                    );
+                                                  },
+                                                )
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.all(8.0),
+                                              child: RaisedButton(
+                                                child: Text("Pick from Gallery"),
+                                                onPressed: () async {
+
+                                                  final ImagePicker _picker = ImagePicker();
+                                                  final XFile? pickedFile = await _picker.pickVideo(
+                                                      source: ImageSource.gallery);
+
+                                                  // if (pickedFile != null) {
+                                                  String videoFile = pickedFile!.path;
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            VideoToBePosted(videoFile)),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              });
+
+
+
+                          print("The button has been clicked");
+                        },
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                              color: white.withOpacity(0.1),
+                              shape: BoxShape.circle),
+                          child: Center(
+                            child: Icon(
                               Icons.video_camera_back,
                               color: primary,
                               size: 20,
@@ -358,23 +368,24 @@ class _StatusPageState extends State<StatusPage> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => StatusMessage()),
+                            MaterialPageRoute(
+                                builder: (context) => StatusMessage()),
                           );
                         },
                         child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                          color: white.withOpacity(0.1),
-                          shape: BoxShape.circle),
-                      child: Center(
-                        child: Icon(
-                          Icons.edit,
-                          color: primary,
-                          size: 20,
-                        ),
-                      ),
-                    )),
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                              color: white.withOpacity(0.1),
+                              shape: BoxShape.circle),
+                          child: Center(
+                            child: Icon(
+                              Icons.edit,
+                              color: primary,
+                              size: 20,
+                            ),
+                          ),
+                        )),
                   ],
                 )
               ],
@@ -401,17 +412,15 @@ class _StatusPageState extends State<StatusPage> {
         SizedBox(
           height: 10,
         ),
-
         FutureBuilder<List<StatusPreviewModel>>(
           future: statusList,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(
-                scrollDirection: Axis.vertical,
-                shrinkWrap: true,
-                itemCount: snapshot.data!.length,
-                itemBuilder: (_, index) => preview(snapshot, index)
-              );
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (_, index) => StatusItem(snapshot.data![index].userNumber,snapshot.data![index].lastStatusTime,snapshot.data![index].numberOfStatus));
             } else {
               return Center(child: CircularProgressIndicator());
             }
@@ -422,56 +431,48 @@ class _StatusPageState extends State<StatusPage> {
   }
 }
 
-
 class Photo extends StatelessWidget {
   // const Photo({Key? key}) : super(key: key);
 
   final String imageUrl;
   late String statusCaption = "";
 
-  Photo (this.imageUrl, this.statusCaption);
+  Photo(this.imageUrl, this.statusCaption);
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Colors.black,
+        backgroundColor: Colors.black,
         appBar: AppBar(
           elevation: 0.0,
           title: Text(''),
           backgroundColor: Colors.black,
-
         ),
-        body:
-        Column(
+        body: Column(
           // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Container(
-              color: Colors.black,
-              width: screenWidth,
-              height: screenHeight * 0.8,
-              margin: EdgeInsets.only(bottom: 20),
+                color: Colors.black,
+                width: screenWidth,
+                height: screenHeight * 0.8,
+                margin: EdgeInsets.only(bottom: 20),
                 padding: EdgeInsets.only(top: 50),
                 child: PhotoView(
-
                   imageProvider: NetworkImage(imageUrl),
-                )
-            ),
+                )),
             Container(
               color: Colors.black,
               width: screenWidth,
-              child: Text(statusCaption != null ? statusCaption : "",
+              child: Text(
+                statusCaption != null ? statusCaption : "",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  color: white
-                ),
+                style: TextStyle(fontSize: 20, color: white),
               ),
             )
           ],
-        )
-       );
+        ));
   }
 }
 
@@ -490,18 +491,18 @@ class _VideoAppState extends State<VideoApp> {
   @override
   void initState() {
     super.initState();
-    print("Atleast I tried");
-    _controller = VideoPlayerController.network(widget.videoUrl,
+    _controller = VideoPlayerController.network(
+      widget.videoUrl,
       // closedCaptionFile: _loadCaptions(),
       // videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-    )
-      ..initialize().then((value) {
+    )..initialize().then((value) {
         _controller.addListener(() {
-          if (!_controller.value.isPlaying &&_controller.value.isInitialized &&
-              (_controller.value.duration ==_controller.value.position)) {
+          if (!_controller.value.isPlaying &&
+              _controller.value.isInitialized &&
+              (_controller.value.duration == _controller.value.position)) {
             Navigator.pop(context);
           }
-            //Video Completed//
+          //Video Completed//
         });
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {
@@ -515,7 +516,7 @@ class _VideoAppState extends State<VideoApp> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Colors.black,
+        backgroundColor: Colors.black,
         appBar: AppBar(
           elevation: 0.0,
           title: Text(''),
@@ -531,39 +532,29 @@ class _VideoAppState extends State<VideoApp> {
                           _controller.pause();
                         });
                       },
-
                       onLongPressUp: () {
-
                         setState(() {
                           _controller.play();
                         });
                       },
                       child: Container(
-
-                        color: Colors.black,
-                        child: AspectRatio(
-
-                          aspectRatio: _controller.value.aspectRatio,
-                          child: VideoPlayer(_controller),
-                        )
-                      ))
-              ),
+                          color: Colors.black,
+                          child: AspectRatio(
+                            aspectRatio: _controller.value.aspectRatio,
+                            child: VideoPlayer(_controller),
+                          )))),
               Container(
                 color: Colors.black,
                 width: screenWidth,
-                child: Text(widget.statusCaption,
+                child: Text(
+                  widget.statusCaption,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: white
-                  ),
+                  style: TextStyle(fontSize: 20, color: white),
                 ),
               )
             ],
           ),
-        )
-
-        );
+        ));
   }
 
   @override
@@ -572,6 +563,3 @@ class _VideoAppState extends State<VideoApp> {
     _controller.dispose();
   }
 }
-
-
-

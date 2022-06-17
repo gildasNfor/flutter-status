@@ -31,7 +31,7 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
 
   late VideoPlayerController _controller;
   String statusCaption = "";
-
+  late String duration;
   @override
   void initState() {
     _controller = VideoPlayerController.file(File(widget.mediaUrl))
@@ -45,6 +45,8 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
         });
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {
+          print("THE SIZE OF THIS VIDEO IS");
+          duration = _controller.value.duration.inSeconds.toString();
           _controller.play();
           // _controller!.setVolume(0.0);
         });
@@ -137,6 +139,7 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
                               request.files
                                   .add(MultipartFile.fromBytes("statusVideo",File(widget.mediaUrl).readAsBytesSync(),filename: widget.mediaUrl.toString().split("/").last));
                               request.fields["statusCaption"] = statusCaption;
+                              request.fields["duration"] = duration;
                               request.fields["disappearTime"] = store.state.date + "T" + store.state.time;
                               request.fields["isPublicStatus"] = store.state.isPublicStatus.toString();
 
