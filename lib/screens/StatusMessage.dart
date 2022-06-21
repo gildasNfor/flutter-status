@@ -20,6 +20,8 @@ class StatusMessage extends StatefulWidget {
 
 class _StatusMessageState extends State<StatusMessage> {
   String statusText = "";
+  bool sent = false;
+
   // const _StatusMessageState({Key? key}) : super(key: key);
 
   @override
@@ -38,7 +40,7 @@ class _StatusMessageState extends State<StatusMessage> {
     store.dispatch(FetchTimeAndDateAction(dateTime, _time, false));
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
+    return  !sent ? Scaffold(
         appBar: AppBar(
           elevation: 0.0,
           title: Text(''),
@@ -103,7 +105,11 @@ class _StatusMessageState extends State<StatusMessage> {
                         width: screenWidth * 0.4,
                         child: statusText != ""
                             ? GestureDetector(
+
                                 onTap: () async {
+                                  setState(() {
+                                    sent = true;
+                                  });
                                   try {
                                     var request = MultipartRequest(
                                         "POST",
@@ -157,6 +163,6 @@ class _StatusMessageState extends State<StatusMessage> {
               )
             ],
           ),
-        ));
+        )) : Center(child: CircularProgressIndicator());
   }
 }

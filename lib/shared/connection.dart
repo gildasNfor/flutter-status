@@ -1,1 +1,1 @@
-const String hostAndPort = 'http://192.168.100.244:8080';
+const String hostAndPort = 'http://192.168.43.223:8080';

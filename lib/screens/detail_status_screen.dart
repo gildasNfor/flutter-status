@@ -5,12 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 import '../models/StatusModel.dart';
 import '../shared/connection.dart';
+import '../theme/colors.dart';
 
 class DetailStatusScreen extends StatefulWidget {
   final int userNumber;
   final int count;
+  final String lastImageThumb;
+  final String userName;
 
-  DetailStatusScreen(this.userNumber, this.count);
+  DetailStatusScreen(this.userNumber, this.count, this.lastImageThumb, this.userName);
 
   _DetailStatusScreenState createState() => _DetailStatusScreenState();
 }
@@ -18,12 +21,14 @@ class DetailStatusScreen extends StatefulWidget {
 class _DetailStatusScreenState extends State<DetailStatusScreen> {
   late Future<List<StatusModel>> _fStatus;
   late List<double> _width;
-  late bool imageAvailable;
-  bool media = true;
+  late bool imageAvailable = true;
+  late bool media = true;
   int index = 0;
   late List list;
   late int count;
   late String statusText;
+  String? caption;
+  late String postTime;
   bool initialised = false;
   late ImageProvider _image;
   late VideoPlayerController _controller;
@@ -31,18 +36,18 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
   @override
   void initState() {
     super.initState();
-    _fStatus = fetchStatus().then((List<StatusModel> status) {
+
+    _fStatus = fetchStatus().then((List<StatusModel> status) async {
       setState(() {
+        list = status;
         count = widget.count;
-        // for (int i = 0; i < count; i++) {
-        //   _width[i] = 0.0;
-        // }
         print("THE WIDTH ARRAY LOOKS SOMETHING LIKE THIS");
         _width = new List.generate(count, (index) => 0.0);
         print(_width);
-
       });
-      _playStatus();
+      Future.delayed(Duration(milliseconds: 100), () {
+        _playStatus();
+      });
       return status;
     });
   }
@@ -56,11 +61,12 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
 
   Future<List<StatusModel>> fetchStatus() async {
     final response =
-        await http.get(Uri.parse('$hostAndPort/status/${widget.userNumber}'));
+    await http.get(Uri.parse('$hostAndPort/status/${widget.userNumber}'));
 
     // print("The response body is:");
     // print(json.decode(response.body));
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
+
 
     return parsed
         .map<StatusModel>((json) => StatusModel.fromMap(json))
@@ -68,8 +74,6 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
   }
 
   _playStatus() async {
-    list = await _fStatus;
-
     if (index < count) {
 
       setState(() {
@@ -77,54 +81,66 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
             (MediaQuery.of(context).size.width - 4.0 - (count - 1) * 4.0) /
                 count;
         if (list[index].statusImageUrl != null) {
+          _image = CachedNetworkImageProvider(list[index].statusImageUrl);
           print(list[index].statusImageUrl);
           media = true;
           imageAvailable = true;
-          _image = CachedNetworkImageProvider(list[index].statusImageUrl);
+          caption = list[index].statusCaption;
+          postTime = list[index].postTime;
           index++;
           Future.delayed(Duration(seconds: 5), () {
             _playStatus();
           });
         } else if (list[index].statusVideoUrl != null) {
           print(list[index].statusVideoUrl);
-          imageAvailable = false;
-          media = true;
+
           _controller = VideoPlayerController.network(
             list[index].statusVideoUrl,
           )..initialize().then((value) {
-              _controller.addListener(() {
-                if (!_controller.value.isPlaying &&
-                    _controller.value.isInitialized &&
-                    (_controller.value.duration ==
-                        _controller.value.position)) {
+            _controller.addListener(() {
+              if (!_controller.value.isPlaying &&
+                  _controller.value.isInitialized &&
+                  (_controller.value.duration ==
+                      _controller.value.position)) {
 
-                }
-                //Video Completed//
-              });
-              setState(() {
-                _controller.play();
-                index++;
-                Future.delayed(Duration(seconds: 26), () {
-                  _playStatus();
-                });
+              }
+              //Video Completed//
+            });
+            imageAvailable = false;
+            media = true;
+            caption = list[index].statusCaption;
+            postTime = list[index].postTime;
+
+            setState(() {
+              _controller.play();
+              var videoLength = int.parse(list[index].duration);
+              index++;
+              Future.delayed(Duration(seconds: videoLength), () {
+                _playStatus();
               });
             });
+          });
         } else {
           media = false;
           statusText = list[index].statusText;
+          caption = list[index].statusCaption;
+          postTime = list[index].postTime;
           index++;
           Future.delayed(Duration(seconds: 5), () {
             _playStatus();
           });
         }
       });
+      setState(() {
+        initialised = true;
+      });
       print(_width);
     } else Navigator.of(context).pop();
 
-    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context)  {
     double mediaWidth = MediaQuery.of(context).size.width;
     return Scaffold(
         backgroundColor: media ? Colors.black : Colors.purple[200],
@@ -160,9 +176,13 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
                           }
 
 
-                          if (_image == null) {
-                            return Container();
-                          }
+                          // if (_image == null) {
+                          //   return Container();
+                          // }
+
+                          // if(_width[index] == 0.0) return Container();
+
+                          if(!initialised) return Container();
 
                           if (media) {
                             if (imageAvailable) {
@@ -180,35 +200,80 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
                                 color: Colors.white,
                               ),
                             );
-                      }
+                          }
 
                       }
                     }),
               ),
-              Text("Caption"),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Row(
-                    children: <Widget>[
-                      Icon(
-                        Icons.arrow_back,
-                        size: 24.0,
-                        color: Colors.white,
-                      ),
-                      CircleAvatar(
-                        radius: 15.0,
-                        backgroundImage:
-                            NetworkImage('http://placekitten.com/g/150/150'),
-                      ),
-                    ],
+             caption != null ? Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                            width: mediaWidth,
+                            color: Colors.black54,
+                            padding: EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 10),
+                            margin: EdgeInsets.only(bottom: 100),
+                            child: Text(
+                              caption!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15.0,
+                                height: 1.2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+              ): Container(),
+              Row(
+                  children: [
+               initialised ? Padding(
+                  padding:
+                  const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.arrow_back,
+                          size: 24.0,
+                          color: Colors.white,
+                        ),
+                        CircleAvatar(
+                          radius: 20.0,
+                          backgroundImage:
+                          NetworkImage(widget.lastImageThumb),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                ) : Container(),
+                  initialised ?  Padding(
+                      padding:
+                      const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                      child: Container(
+                        child: Row(
+                          children: <Widget>[
+                            Text(
+                              widget.userName,
+                              style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: white),
+                            ),
+                            Text(
+                                DateTime.now().hour >= DateTime.parse(postTime).hour ? " Today, " + DateTime.parse(postTime).hour.toString() + ":"  +DateTime.parse(postTime).minute.toString(): "Yesterday, " + DateTime.parse(postTime).hour.toString() + ":" + DateTime.parse(postTime).minute.toString(),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: white.withOpacity(0.5)),
+                            )
+                          ],
+                        ),
+                      ),
+                    ) : Container(),
+              ]),
               FutureBuilder(
                   future: _fStatus,
                   builder: (context,AsyncSnapshot<List<StatusModel>> snapshot) {
@@ -224,7 +289,7 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
                         }
                         List<Widget> children = List.empty(growable: true);
                         List<int> counter =
-                            new List.generate(count, (index) => index);
+                        new List.generate(count, (index) => index);
                         for (dynamic _ in counter) {
                           children.add(Padding(
                             padding: const EdgeInsets.symmetric(
@@ -257,19 +322,19 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
                         }
                         List<Widget> children = List.empty(growable: true);
                         List<int> counter =
-                            List.generate(count, (index) => index);
+                        List.generate(count, (index) => index);
                         int i = 0;
-                        for (dynamic _ in counter) {
+                        for (dynamic _ in snapshot.data!) {
                           children.add(Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 2.0, vertical: 4.0),
                             child: AnimatedContainer(
                               duration: Duration(
                                   seconds:
-                                      list[i].statusVideoUrl != null ? int.parse(list[i].duration) : 5),
+                                  list[i].statusVideoUrl != null ? int.parse(list[i].duration) : 5),
                               height: 2.5,
                               width: _width[i],
-                              color: Colors.red,
+                              color: Colors.white,
                             ),
                           ));
                           i++;

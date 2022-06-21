@@ -32,6 +32,8 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
   late VideoPlayerController _controller;
   String statusCaption = "";
   late String duration;
+  bool sent = false;
+
   @override
   void initState() {
     _controller = VideoPlayerController.file(File(widget.mediaUrl))
@@ -71,7 +73,7 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
     store.dispatch(FetchTimeAndDateAction(dateTime, _time, false));
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
+    return !sent ? Scaffold(
         appBar: AppBar(
           elevation: 0.0,
           title: Text(''),
@@ -132,13 +134,15 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
                       ),
                       GestureDetector(
                           onTap:() async {
-
+                            setState(() {
+                              sent = true;
+                            });
                             try {
                               var request = MultipartRequest("POST", Uri.parse("$hostAndPort/status/672840255"));
                               print(widget.mediaUrl);
                               request.files
                                   .add(MultipartFile.fromBytes("statusVideo",File(widget.mediaUrl).readAsBytesSync(),filename: widget.mediaUrl.toString().split("/").last));
-                              request.fields["statusCaption"] = statusCaption;
+                              statusCaption != "" ? request.fields["statusCaption"] = statusCaption : print("No caption");
                               request.fields["duration"] = duration;
                               request.fields["disappearTime"] = store.state.date + "T" + store.state.time;
                               request.fields["isPublicStatus"] = store.state.isPublicStatus.toString();
@@ -186,6 +190,6 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
                 ],
               )
           ),
-        ) );
+        ) ) : Center(child: CircularProgressIndicator());
   }
 }

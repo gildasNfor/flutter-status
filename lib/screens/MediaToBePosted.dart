@@ -31,6 +31,7 @@ class _MediaToBePostedState extends State<MediaToBePosted> {
   late FocusNode myFocusNode;
 
    String statusCaption = "";
+   bool sent = false;
 
   @override
   void initState() {
@@ -56,7 +57,7 @@ class _MediaToBePostedState extends State<MediaToBePosted> {
     store.dispatch(FetchTimeAndDateAction(dateTime, _time, false));
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
+    return !sent ? Scaffold(
         appBar: AppBar(
           elevation: 0.0,
           title: Text(''),
@@ -115,13 +116,15 @@ class _MediaToBePostedState extends State<MediaToBePosted> {
                       ),
                       GestureDetector(
                           onTap:() async {
-
+                            setState(() {
+                              sent = true;
+                            });
                             try {
                               var request = MultipartRequest("POST", Uri.parse("$hostAndPort/status/672840255"));
                               print(widget.mediaUrl);
                               request.files
                                   .add(MultipartFile.fromBytes("statusImage",File(widget.mediaUrl).readAsBytesSync(),filename: widget.mediaUrl.toString().split("/").last));
-                              request.fields["statusCaption"] = statusCaption;
+                              statusCaption != "" ? request.fields["statusCaption"] = statusCaption : print("No caption");
                               request.fields["disappearTime"] = store.state.date.toString() + "T" + store.state.time.toString();
                               request.fields["isPublicStatus"] = store.state.isPublicStatus.toString();
                               var response = await request.send();
@@ -166,7 +169,7 @@ class _MediaToBePostedState extends State<MediaToBePosted> {
                 ],
               )
           ),
-        ));
+        )) : Center(child: CircularProgressIndicator());
   }
 }
 

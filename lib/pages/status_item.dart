@@ -3,9 +3,6 @@ import 'package:http/http.dart' as http;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_whatsapp/src/helpers/text_helpers.dart';
-// import 'package:flutter_whatsapp/src/models/status.dart';
-// import 'package:flutter_whatsapp/src/values/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:whatapp_clone_ui/pages/status_page.dart';
 import 'package:whatapp_clone_ui/screens/detail_status_screen.dart';
@@ -19,22 +16,11 @@ import '../shared/connection.dart';
 class StatusItem extends StatelessWidget {
   late final int userNumber;
   late final String lastPosted;
+  late final String userName;
   late final int numberOfStatus;
-  // final String subtitle;
-  // final String thumbnail;
-  // final Function onTap;
-  // final String searchKeyword;
-  //
-  // StatusItem({
-  //   // this.status,
-  //   // this.title,
-  //   // this.subtitle,
-  //   // this.thumbnail,
-  //   // this.onTap,
-  //   // this.searchKeyword,
-  // });
+  late final String lastImageThumb;
 
-  StatusItem(this.userNumber, this.lastPosted, this.numberOfStatus) {
+  StatusItem(this.userNumber, this.lastPosted, this.numberOfStatus, this.lastImageThumb, this.userName) {
     print(numberOfStatus);
   }
 
@@ -46,71 +32,13 @@ class StatusItem extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                     builder: (context) =>
-                        DetailStatusScreen(userNumber, numberOfStatus)),
+                        DetailStatusScreen(userNumber, numberOfStatus, lastImageThumb, userName)),
               );
-        // final response = await http.get(Uri.parse(
-        //     '$hostAndPort/status/$userNumber'));
-        //
-        // print(json.decode(response.body)[0]);
-        // final parsed =
-        // json.decode(response.body).cast<Map<String, dynamic>>();
-        //
-        // final res = parsed
-        //     .map<StatusModel>((json) => StatusModel.fromMap(json))
-        //     .toList()[0];
-        // print(res);
-        //
-        // if (res.statusImageUrl != null) {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //         builder: (context) =>
-        //             Photo(res.statusImageUrl, res.statusCaption)),
-        //   );
-        // } else if (res.statusVideoUrl != null) {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //         builder: (context) =>
-        //             VideoApp(res.statusVideoUrl, res.statusCaption)),
-        //   );
-        // } else {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //         builder: (context) => DisplayStatusText(res.statusText)),
-        //   );
-        // }
       },
-      // tileColor: Colors.white,
-      // onTap: onTap,
       leading:
-          _getThumbnail(true, numberOfStatus),
-      //     : Stack(
-      //   children: <Widget>[
-      //     CircleAvatar(
-      //       radius: 28.0,
-      //       backgroundImage: CachedNetworkImageProvider("https://upload.wikimedia.org/wikipedia/commons/5/5f/Alberto_conversi_profile_pic.jpg"),
-      //     ),
-      //     Positioned(
-      //       bottom: 0.0,
-      //       right: 0.0,
-      //       child: Container(
-      //         decoration: BoxDecoration(
-      //             color: Colors.white,
-      //             borderRadius: BorderRadius.all(Radius.circular(10))
-      //         ),
-      //         child: Icon(
-      //           Icons.add,
-      //           size: 20.0,
-      //           color: Colors.white,
-      //         ),
-      //       ),
-      //     )
-      //   ],
-      // ),
-      title:  Text(
-        userNumber.toString(),
+          _getThumbnail(true, numberOfStatus, lastImageThumb),
+      title: Text(
+        userName,
         style: TextStyle(
           fontSize: 18.0,
           fontWeight: FontWeight.bold,
@@ -118,7 +46,7 @@ class StatusItem extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-             lastPosted,
+         DateTime.now().hour > DateTime.parse(lastPosted).hour ? "Today, " + DateTime.parse(lastPosted).hour.toString() + ":"  +DateTime.parse(lastPosted).minute.toString(): "Yesterday, " + DateTime.parse(lastPosted).hour.toString() + ":" + DateTime.parse(lastPosted).minute.toString(),
         style: TextStyle(
           fontSize: 12.0,
           color: Colors.grey,
@@ -127,7 +55,7 @@ class StatusItem extends StatelessWidget {
     );
   }
 
-  Widget _getThumbnail(bool isSeen, int statusNum) {
+  Widget _getThumbnail(bool isSeen, int statusNum, String image) {
     return Container(
       width: 60.0,
       height: 60.0,
@@ -137,7 +65,7 @@ class StatusItem extends StatelessWidget {
           decoration: BoxDecoration(
               color: Colors.red,
               image: DecorationImage(
-                image: CachedNetworkImageProvider("https://upload.wikimedia.org/wikipedia/commons/5/5f/Alberto_conversi_profile_pic.jpg"),
+                image: CachedNetworkImageProvider(image),
                 fit: BoxFit.cover,
               ),
               borderRadius: new BorderRadius.all(new Radius.circular(30.0)),
