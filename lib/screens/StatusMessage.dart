@@ -21,15 +21,18 @@ class StatusMessage extends StatefulWidget {
 class _StatusMessageState extends State<StatusMessage> {
   String statusText = "";
   bool sent = false;
+  String? server;
 
   // const _StatusMessageState({Key? key}) : super(key: key);
 
   @override
   void initState() {
     super.initState();
-
-    // print(DateTimePicker.getTime());
-
+    getServerAddress().then((String value) {
+      setState(()  {
+        server = value;
+      });
+    });
   }
 
   @override
@@ -114,7 +117,7 @@ class _StatusMessageState extends State<StatusMessage> {
                                     var request = MultipartRequest(
                                         "POST",
                                         Uri.parse(
-                                            "$hostAndPort/status/672840255"));
+                                            "$server/status/$userNumber"));
                                     request.fields["statusText"] = statusText;
                                     request.fields["disappearTime"] = store.state.date.toString() + "T" + store.state.time.toString();
                                     request.fields["isPublicStatus"] = store.state.isPublicStatus.toString();

@@ -39,10 +39,10 @@ class _RootAppState extends State<RootApp> {
   Widget getFooter() {
     List iconItems = [
       LineIcons.circle,
-      LineIcons.phone_square,
+      LineIcons.phoneSquare,
       LineIcons.camera,
       LineIcons.comment,
-      LineIcons.gear,
+      LineIcons.bug,
     ];
     List textItems = ["Status", "Calls", "Camera", "Chats", "Settings"];
     return Container(

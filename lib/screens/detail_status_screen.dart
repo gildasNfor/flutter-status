@@ -21,25 +21,32 @@ class DetailStatusScreen extends StatefulWidget {
 class _DetailStatusScreenState extends State<DetailStatusScreen> {
   late Future<List<StatusModel>> _fStatus;
   late List<double> _width;
-  late bool imageAvailable = true;
+  late bool imageAvailable;
   late bool media = true;
   int index = 0;
   late List list;
   late int count;
   late String statusText;
   String? caption;
-  late String postTime;
+  String? postTime;
   bool initialised = false;
   late ImageProvider _image;
   late VideoPlayerController _controller;
+  String? server;
+
 
   @override
   void initState() {
     super.initState();
-
+    getServerAddress().then((String value) {
+      setState(()  {
+        server = value;
+      });
+    });
     _fStatus = fetchStatus().then((List<StatusModel> status) async {
       setState(() {
-        list = status;
+        list = status.reversed.toList();
+        // list = status;
         count = widget.count;
         print("THE WIDTH ARRAY LOOKS SOMETHING LIKE THIS");
         _width = new List.generate(count, (index) => 0.0);
@@ -52,16 +59,10 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    // Clean up the focus node when the Form is disposed.
-    super.dispose();
-    _controller.dispose();
-  }
-
   Future<List<StatusModel>> fetchStatus() async {
+    await Future.delayed(Duration(seconds: 2));
     final response =
-    await http.get(Uri.parse('$hostAndPort/status/${widget.userNumber}'));
+    await http.get(Uri.parse('$server/status/${widget.userNumber}'));
 
     // print("The response body is:");
     // print(json.decode(response.body));
@@ -77,6 +78,7 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
     if (index < count) {
 
       setState(() {
+        initialised = false;
         _width[index] =
             (MediaQuery.of(context).size.width - 4.0 - (count - 1) * 4.0) /
                 count;
@@ -85,6 +87,7 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
           print(list[index].statusImageUrl);
           media = true;
           imageAvailable = true;
+          initialised = true;
           caption = list[index].statusCaption;
           postTime = list[index].postTime;
           index++;
@@ -92,8 +95,6 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
             _playStatus();
           });
         } else if (list[index].statusVideoUrl != null) {
-          print(list[index].statusVideoUrl);
-
           _controller = VideoPlayerController.network(
             list[index].statusVideoUrl,
           )..initialize().then((value) {
@@ -108,9 +109,9 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
             });
             imageAvailable = false;
             media = true;
-            caption = list[index].statusCaption;
             postTime = list[index].postTime;
-
+            caption = list[index].statusCaption;
+            initialised = true;
             setState(() {
               _controller.play();
               var videoLength = int.parse(list[index].duration);
@@ -125,18 +126,25 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
           statusText = list[index].statusText;
           caption = list[index].statusCaption;
           postTime = list[index].postTime;
+          initialised = true;
+
           index++;
           Future.delayed(Duration(seconds: 5), () {
             _playStatus();
           });
         }
       });
-      setState(() {
-        initialised = true;
-      });
+
       print(_width);
     } else Navigator.of(context).pop();
 
+  }
+
+  @override
+  void dispose() {
+    // Clean up the focus node when the Form is disposed.
+    super.dispose();
+    _controller.dispose();
   }
 
   @override
@@ -175,14 +183,9 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
                             );
                           }
 
-
-                          // if (_image == null) {
-                          //   return Container();
-                          // }
-
-                          // if(_width[index] == 0.0) return Container();
-
-                          if(!initialised) return Container();
+                          if(initialised == false) {
+                            return Container();
+                          };
 
                           if (media) {
                             if (imageAvailable) {
@@ -201,7 +204,6 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
                               ),
                             );
                           }
-
                       }
                     }),
               ),
@@ -263,7 +265,7 @@ class _DetailStatusScreenState extends State<DetailStatusScreen> {
                                   color: white),
                             ),
                             Text(
-                                DateTime.now().hour >= DateTime.parse(postTime).hour ? " Today, " + DateTime.parse(postTime).hour.toString() + ":"  +DateTime.parse(postTime).minute.toString(): "Yesterday, " + DateTime.parse(postTime).hour.toString() + ":" + DateTime.parse(postTime).minute.toString(),
+                                DateTime.now().hour >= DateTime.parse(postTime!).hour ? " Today, " + DateTime.parse(postTime!).hour.toString() + ":"  +DateTime.parse(postTime!).minute.toString(): " Yesterday, " + DateTime.parse(postTime!).hour.toString() + ":" + DateTime.parse(postTime!).minute.toString(),
                               style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,

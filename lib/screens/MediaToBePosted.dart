@@ -32,11 +32,18 @@ class _MediaToBePostedState extends State<MediaToBePosted> {
 
    String statusCaption = "";
    bool sent = false;
+   String? server;
 
   @override
   void initState() {
-
     super.initState();
+
+    getServerAddress().then((String value) {
+      setState(()  {
+        server = value;
+      });
+    });
+
 
   }
 
@@ -120,7 +127,7 @@ class _MediaToBePostedState extends State<MediaToBePosted> {
                               sent = true;
                             });
                             try {
-                              var request = MultipartRequest("POST", Uri.parse("$hostAndPort/status/672840255"));
+                              var request = MultipartRequest("POST", Uri.parse("$server/status/$userNumber"));
                               print(widget.mediaUrl);
                               request.files
                                   .add(MultipartFile.fromBytes("statusImage",File(widget.mediaUrl).readAsBytesSync(),filename: widget.mediaUrl.toString().split("/").last));

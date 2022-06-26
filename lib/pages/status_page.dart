@@ -12,6 +12,7 @@ import 'package:whatapp_clone_ui/models/StatusModel.dart';
 import 'package:whatapp_clone_ui/models/StatusPreviewModel.dart';
 import 'package:whatapp_clone_ui/pages/status_item.dart';
 import 'package:whatapp_clone_ui/pages/video_page.dart';
+import 'package:whatapp_clone_ui/screens/SetServerAddress.dart';
 import 'package:whatapp_clone_ui/screens/TakePictureScreen.dart';
 import 'package:whatapp_clone_ui/shared/connection.dart';
 import 'package:whatapp_clone_ui/theme/colors.dart';
@@ -34,20 +35,24 @@ class StatusPage extends StatefulWidget {
 class _StatusPageState extends State<StatusPage> {
   late Future<List<StatusPreviewModel>> statusList;
   late Future<List<StatusPreviewModel>> myStatus;
-  int userNumber = 672840255;
-  // late int number;
+  String? server;
+
 
   @override
   void initState() {
     super.initState();
+    getServerAddress().then((String value) {
+      setState(()  {
+        server = value;
+      });
+    });
     statusList = fetchStatusPreview();
     myStatus = fetchMyStatusPreview();
-    print(myStatus);
-    // print(myStatus.userNumber);
   }
 
   Future<List<StatusPreviewModel>> fetchStatusPreview() async {
-    final response = await http.get(Uri.parse('$hostAndPort/status_preview'));
+    await Future.delayed(Duration(seconds: 3));
+    final response = await http.get(Uri.parse('$server/status_preview'));
     if (response.statusCode == 200) {
       final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
       return parsed
@@ -60,7 +65,8 @@ class _StatusPageState extends State<StatusPage> {
 
     Future<List<StatusPreviewModel>> fetchMyStatusPreview() async {
     String number = userNumber.toString();
-    final response = await http.get(Uri.parse('$hostAndPort/status_preview/$number'));
+    await Future.delayed(Duration(seconds: 3));
+    final response = await http.get(Uri.parse('$server/status_preview/$number'));
     if (response.statusCode == 200) {
       final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
       return parsed
@@ -82,16 +88,18 @@ class _StatusPageState extends State<StatusPage> {
 
   PreferredSizeWidget getAppBar() {
     return AppBar(
+      actions: [
+        IconButton(
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ServerPage()));
+            },
+            icon: Icon(Icons.more_vert)),
+      ],
       backgroundColor: bgColor,
-      title: Row(
-        children: [
-          Text(
-            "Privacy",
-            style: TextStyle(
-                fontSize: 16, color: primary, fontWeight: FontWeight.w500),
-          )
-        ],
-      ),
+
     );
   }
 
@@ -162,7 +170,8 @@ class _StatusPageState extends State<StatusPage> {
                                     if (snapshot.hasError) {
                                       print("A HUGE ERROR OCCURED");
                                       print(snapshot.error);
-                                      return _getThumbnail(true, 0, 'http://localhost:8080/user/view/$userNumber');
+                                      String num = userNumber.toString();
+                                      return _getThumbnail(true, 0, 'http://localhost:8080/user/view/$num');
 
                                     }
                                     return GestureDetector(

@@ -46,7 +46,7 @@ class StatusItem extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-         DateTime.now().hour > DateTime.parse(lastPosted).hour ? "Today, " + DateTime.parse(lastPosted).hour.toString() + ":"  +DateTime.parse(lastPosted).minute.toString(): "Yesterday, " + DateTime.parse(lastPosted).hour.toString() + ":" + DateTime.parse(lastPosted).minute.toString(),
+         DateTime.now().hour >= DateTime.parse(lastPosted).hour ? "Today, " + DateTime.parse(lastPosted).hour.toString() + ":"  +DateTime.parse(lastPosted).minute.toString(): " Yesterday, " + DateTime.parse(lastPosted).hour.toString() + ":" + DateTime.parse(lastPosted).minute.toString(),
         style: TextStyle(
           fontSize: 12.0,
           color: Colors.grey,

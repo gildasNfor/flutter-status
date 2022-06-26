@@ -33,9 +33,11 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
   String statusCaption = "";
   late String duration;
   bool sent = false;
+  String? server;
 
   @override
   void initState() {
+    super.initState();
     _controller = VideoPlayerController.file(File(widget.mediaUrl))
       ..initialize().then((value) {
         _controller.addListener(() {
@@ -53,8 +55,11 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
           // _controller!.setVolume(0.0);
         });
       });
-
-    super.initState();
+    getServerAddress().then((String value) {
+      setState(()  {
+        server = value;
+      });
+    });
 
   }
 
@@ -138,7 +143,7 @@ class _MediaToBePostedState extends State<VideoToBePosted> {
                               sent = true;
                             });
                             try {
-                              var request = MultipartRequest("POST", Uri.parse("$hostAndPort/status/672840255"));
+                              var request = MultipartRequest("POST", Uri.parse("$server/status/$userNumber"));
                               print(widget.mediaUrl);
                               request.files
                                   .add(MultipartFile.fromBytes("statusVideo",File(widget.mediaUrl).readAsBytesSync(),filename: widget.mediaUrl.toString().split("/").last));

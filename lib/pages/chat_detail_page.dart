@@ -71,11 +71,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         ),
       ),
       actions: [
-        Icon(
-          LineIcons.video_camera,
-          color: primary,
-          size: 27,
-        ),
+        // Icon(
+        //   LineIcons.video_camera,
+        //   color: primary,
+        //   size: 27,
+        // ),
         SizedBox(
           width: 15,
         ),
@@ -123,7 +123,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       border: InputBorder.none,
                       hintText: "",
                       suffixIcon: Icon(
-                        LineIcons.sticky_note,
+                        LineIcons.stickyNote,
                         color: primary,
                         size: 25,
                       )),
